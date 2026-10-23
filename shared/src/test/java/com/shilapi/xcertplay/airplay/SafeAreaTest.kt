@@ -131,4 +131,44 @@ class SafeAreaTest {
         assertNull(SafeAreaCodec.decode("1,2,3"))
         assertNull(SafeAreaCodec.decode("1,2,1,4"))
     }
+
+    @Test
+    fun steppingTopEdgeReservesOnePercentStrip() {
+        val stepped = SafeAreaRect(0, 0, 1920, 1080)
+            .stepEdgeInset(SafeAreaEdge.TOP, direction = 1, 1920, 1080)
+
+        assertEquals(SafeAreaRect(0, 10, 1920, 1080), stepped)
+    }
+
+    @Test
+    fun steppingReserveBackStopsAtTheEdge() {
+        val stepped = SafeAreaRect(0, 5, 1920, 1080)
+            .stepEdgeInset(SafeAreaEdge.TOP, direction = -1, 1920, 1080)
+
+        assertEquals(SafeAreaRect(0, 0, 1920, 1080), stepped)
+    }
+
+    @Test
+    fun steppingBottomAndRightMeasuresTheReservedStripFromThatEdge() {
+        val bottom = SafeAreaRect(0, 0, 1920, 1080)
+            .stepEdgeInset(SafeAreaEdge.BOTTOM, direction = 1, 1920, 1080)
+        val right = SafeAreaRect(0, 0, 1920, 1080)
+            .stepEdgeInset(SafeAreaEdge.RIGHT, direction = 1, 1920, 1080)
+
+        assertEquals(SafeAreaRect(0, 0, 1920, 1070), bottom)
+        assertEquals(SafeAreaRect(0, 0, 1901, 1080), right)
+    }
+
+    @Test
+    fun steppingNeverEmptiesTheRectAndStopsAtItsLimit() {
+        val narrow = SafeAreaRect(1900, 1070, 1920, 1080)
+
+        val clampedTop = narrow.stepEdgeInset(SafeAreaEdge.TOP, direction = 1, 1920, 1080)
+        val oneStepRight = narrow.stepEdgeInset(SafeAreaEdge.RIGHT, direction = 1, 1920, 1080)
+        val twoStepsRight = oneStepRight.stepEdgeInset(SafeAreaEdge.RIGHT, direction = 1, 1920, 1080)
+
+        assertEquals(SafeAreaRect(1900, 1079, 1920, 1080), clampedTop)
+        assertEquals(SafeAreaRect(1900, 1070, 1901, 1080), oneStepRight)
+        assertEquals(oneStepRight, twoStepsRight)
+    }
 }

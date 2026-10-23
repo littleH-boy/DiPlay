@@ -334,6 +334,15 @@
     <string name="s_80_lighter_load" formatted="false">80% · حمل أخف</string>
     <string name="safe_area">المنطقة الآمنة</string>
     <string name="safe_area_waiting_for_activity_size">المنطقة الآمنة: بانتظار حجم النشاط</string>
+    <string name="settings_safe_area">المنطقة الآمنة</string>
+    <string name="safe_area_applies_next_connection">يُطبَّق الحفظ عند اتصال CarPlay التالي.</string>
+    <string name="safe_area_black_reserved">إبقاء المناطق المحجوزة سوداء</string>
+    <string name="safe_area_black_reserved_description">لا يرسم CarPlay شيئًا في الأشرطة المحجوزة. فعِّل هذا عندما يغطي شريط ثابت في السيارة الصورة، فيظهر الشريط المغطى أسود بدلًا من الخريطة.</string>
+    <string name="safe_area_edge_top">الحافة العلوية</string>
+    <string name="safe_area_edge_bottom">الحافة السفلية</string>
+    <string name="safe_area_edge_left">الحافة اليسرى</string>
+    <string name="safe_area_edge_right">الحافة اليمنى</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">حفظ</string>
     <string name="save_1_1">حفظ 1:1</string>
     <string name="save_and_reconnect">حفظ وإعادة الاتصال</string>
@@ -755,6 +764,9 @@
     <string name="settings_discard_pending_title">تجاهل التغييرات؟</string>
     <string name="settings_discard_pending_message">لم يتم بعد حفظ الدقة ومعدل الإطارات والاتصال وباقي الإعدادات التي غيرتها. حفظ وإعادة الاتصال يطبقها.</string>
     <string name="settings_discard_pending_confirm">تجاهل</string>
+    <string name="settings_stutter_detected_title">صورة CarPlay متقطعة</string>
+    <string name="settings_stutter_detected_message">يفقد CarPlay إطارات منذ فترة. هل تريد خفض %1$s إلى %2$s وإعادة الاتصال؟</string>
+    <string name="settings_stutter_ignore">ليس الآن</string>
     <string name="settings_gesture_disabled">إيقاف</string>
     <string name="settings_gesture_disabled_hint">تم تعطيل اختصار السحب لأسفل.</string>
     <string name="settings_gesture_disabled_action">القائمة السريعة · السحب معطّل (انقر للتبديل)</string>

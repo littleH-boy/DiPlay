@@ -345,6 +345,15 @@
     <string name="s_80_lighter_load" formatted="false">80% · менше навантаження</string>
     <string name="safe_area">Безпечна область</string>
     <string name="safe_area_waiting_for_activity_size">Безпечна область: очікування розміру вікна</string>
+    <string name="settings_safe_area">Безпечна зона</string>
+    <string name="safe_area_applies_next_connection">Збережене застосовується під час наступного підключення CarPlay.</string>
+    <string name="safe_area_black_reserved">Тримати зарезервовані смуги чорними</string>
+    <string name="safe_area_black_reserved_description">CarPlay нічого не малює в зарезервованих смугах. Увімкніть, якщо постійна панель автомобіля закриває зображення: закрита смуга буде чорною замість мапи.</string>
+    <string name="safe_area_edge_top">Верхній край</string>
+    <string name="safe_area_edge_bottom">Нижній край</string>
+    <string name="safe_area_edge_left">Лівий край</string>
+    <string name="safe_area_edge_right">Правий край</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">Зберегти</string>
     <string name="save_1_1">Зберегти 1:1</string>
     <string name="save_and_reconnect">Зберегти й перепідключитися</string>
@@ -767,6 +776,9 @@
     <string name="settings_discard_pending_title">Відкинути зміни?</string>
     <string name="settings_discard_pending_message">Роздільна здатність, частота кадрів, підключення та інші змінені налаштування ще не збережені. «Зберегти та перепідключитися» застосує їх.</string>
     <string name="settings_discard_pending_confirm">Відкинути</string>
+    <string name="settings_stutter_detected_title">CarPlay підгальмовує</string>
+    <string name="settings_stutter_detected_message">CarPlay вже деякий час пропускає кадри. Знизити %1$s до %2$s і перепідключитися?</string>
+    <string name="settings_stutter_ignore">Не зараз</string>
     <string name="settings_gesture_disabled">Вимкнено</string>
     <string name="settings_gesture_disabled_hint">Жест проведення вниз для відкриття швидкого меню вимкнено.</string>
     <string name="settings_gesture_disabled_action">Швидке меню · свайп вимкнено (торкніться, щоб змінити)</string>

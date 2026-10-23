@@ -900,6 +900,56 @@ class CarPlayHostSettingsTest {
         assertEquals(edited, AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
     }
 
+    @Test fun safeAreaStepperReservesTheTopStripAndPersistsItOnSave() {
+        AirPlayPersistence.saveSafeAreaRect(activity, 1920, 990, SafeAreaRect(0, 0, 1920, 990))
+        invoke("openSafeAreaEditor")
+
+        stepSafeAreaEdge(SafeAreaEdge.TOP, 1)
+        assertEquals(SafeAreaRect(0, 0, 1920, 990), AirPlayPersistence.loadSafeAreaRect(activity, 1920, 990))
+        invoke("saveSafeAreaEditor")
+
+        assertEquals(SafeAreaRect(0, 9, 1920, 990), AirPlayPersistence.loadSafeAreaRect(activity, 1920, 990))
+    }
+
+    @Test fun safeAreaEditorsBlackReservedSwitchPersistsOutsideTheMenu() {
+        AirPlayPersistence.saveSafeAreaDrawOutside(activity, true)
+        invoke("loadPersistedSettings")
+        invoke("openSafeAreaEditor")
+        val editor = field("safeAreaEditor") as ViewGroup
+
+        views(editor).filterIsInstance<Switch>()
+            .single { it.contentDescription == activity.getString(R.string.safe_area_black_reserved_description) }
+            .performClick()
+
+        assertFalse(AirPlayPersistence.loadSafeAreaDrawOutside(activity))
+        assertEquals(false, field("safeAreaDrawOutside"))
+    }
+
+    @Test fun safeAreaEditorEntryOpensTheEditorAndClosingKeepsTheMenuClosed() {
+        activity.intent.putExtra("safe_area_editor", true)
+        invoke("onResume")
+        flushViewPostQueue(field("videoView") as View)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(field("safeAreaEditorActive") as Boolean)
+        assertEquals(View.VISIBLE, (field("safeAreaEditor") as View).visibility)
+
+        invoke("closeSafeAreaEditor")
+
+        assertEquals(View.GONE, (field("safeAreaEditor") as View).visibility)
+        assertEquals(View.GONE, (field("settingsMenu") as View).visibility)
+    }
+
+    @Test fun closingTheSafeAreaEditorReturnsToTheMenuItWasOpenedFrom() {
+        invoke("openSettingsMenu")
+        assertEquals(View.VISIBLE, (field("settingsMenu") as View).visibility)
+
+        invoke("openSafeAreaEditor")
+        assertEquals(View.GONE, (field("settingsMenu") as View).visibility)
+        invoke("closeSafeAreaEditor")
+
+        assertEquals(View.VISIBLE, (field("settingsMenu") as View).visibility)
+    }
+
     @Test fun localBlackCornerSettingPreviewsWithoutChangingVideoSessionAndCanBeCancelled() {
         assertEquals(0, AirPlayPersistence.loadBlackCornerRadiusDp(activity))
         val maskLayer = field("blackCornerOverlay") as CarPlayBlackCornerOverlay
@@ -1024,6 +1074,24 @@ class CarPlayHostSettingsTest {
         yield(view)
         if (view is ViewGroup) for (index in 0 until view.childCount) yieldAll(views(view.getChildAt(index)))
     }
+    private fun stepSafeAreaEdge(edge: SafeAreaEdge, direction: Int) {
+        activity.javaClass.getDeclaredMethod("stepSafeAreaEdge",
+            SafeAreaEdge::class.java, Int::class.javaPrimitiveType)
+            .apply { isAccessible = true }.invoke(activity, edge, direction)
+    }
+
+    // Robolectric never attaches the fixture's view tree to a window, so a runnable
+    // queued by View.post before the attach waits in HandlerActionQueue forever.
+    // Hand the queued actions to the paused looper the way dispatchAttachedToWindow
+    // does when a device attaches the window.
+    private fun flushViewPostQueue(view: View) {
+        val field = View::class.java.declaredFields
+            .firstOrNull { it.name == "mRunQueue" || it.name == "mRunActions" } ?: return
+        val queue = field.apply { isAccessible = true }.get(view) ?: return
+        queue.javaClass.getDeclaredMethod("executeActions", Handler::class.java)
+            .apply { isAccessible = true }.invoke(queue, Handler(Looper.getMainLooper()))
+    }
+
     private fun invoke(name: String): Any? = activity.javaClass.getDeclaredMethod(name)
         .apply { isAccessible = true }.invoke(activity)
     private fun field(name: String): Any? = activity.javaClass.getDeclaredField(name)

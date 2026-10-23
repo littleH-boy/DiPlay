@@ -150,6 +150,52 @@ object AirPlaySafeArea {
         ((value.toLong() * numerator + denominator / 2L) / denominator).toInt()
 }
 
+/** A safe-area boundary, named after the reserved strip at that edge. */
+enum class SafeAreaEdge { LEFT, TOP, RIGHT, BOTTOM }
+
+/**
+ * Nudges one boundary of [this] rect by a [percent] step of the activity's axis, in [direction]
+ * (+1 reserves more, -1 reserves less). The reserved strip is measured from that edge, so the
+ * result stays a non-empty rectangle inside the activity. Returns the rect unchanged at a limit.
+ */
+fun SafeAreaRect.stepEdgeInset(
+    edge: SafeAreaEdge,
+    direction: Int,
+    activityWidthPixels: Int,
+    activityHeightPixels: Int,
+    percent: Int = 1,
+): SafeAreaRect {
+    require(activityWidthPixels > 0 && activityHeightPixels > 0) {
+        "Activity dimensions must be positive"
+    }
+    val step = when (edge) {
+        SafeAreaEdge.LEFT, SafeAreaEdge.RIGHT ->
+            maxOf(1, activityWidthPixels * percent / 100)
+        SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM ->
+            maxOf(1, activityHeightPixels * percent / 100)
+    }
+    val inset = when (edge) {
+        SafeAreaEdge.LEFT -> left
+        SafeAreaEdge.TOP -> top
+        SafeAreaEdge.RIGHT -> activityWidthPixels - right
+        SafeAreaEdge.BOTTOM -> activityHeightPixels - bottom
+    }
+    val maxInset = when (edge) {
+        SafeAreaEdge.LEFT -> right - 1
+        SafeAreaEdge.TOP -> bottom - 1
+        SafeAreaEdge.RIGHT -> activityWidthPixels - left - 1
+        SafeAreaEdge.BOTTOM -> activityHeightPixels - top - 1
+    }.coerceAtLeast(0)
+    val moved = (inset + direction * step).coerceIn(0, maxInset)
+    if (moved == inset) return this
+    return when (edge) {
+        SafeAreaEdge.LEFT -> copy(left = moved)
+        SafeAreaEdge.TOP -> copy(top = moved)
+        SafeAreaEdge.RIGHT -> copy(right = activityWidthPixels - moved)
+        SafeAreaEdge.BOTTOM -> copy(bottom = activityHeightPixels - moved)
+    }
+}
+
 /** Stable encoding used by the settings store for one activity-size mapping. */
 object SafeAreaCodec {
     fun encode(rect: SafeAreaRect): String =

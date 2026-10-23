@@ -345,6 +345,15 @@
     <string name="s_80_lighter_load">80% · 負荷が軽い</string>
     <string name="safe_area">セーフエリア</string>
     <string name="safe_area_waiting_for_activity_size">セーフエリア：画面サイズ待ち</string>
+    <string name="settings_safe_area">セーフエリア</string>
+    <string name="safe_area_applies_next_connection">保存後、次回の CarPlay 接続時に有効になります。</string>
+    <string name="safe_area_black_reserved">予約領域を黒のままにする</string>
+    <string name="safe_area_black_reserved_description">CarPlay は予約された帯に何も描画しません。車機の固定バーが画面を覆う場合にオンにすると、覆われた帯は地図ではなく黒で表示されます。</string>
+    <string name="safe_area_edge_top">上辺</string>
+    <string name="safe_area_edge_bottom">下辺</string>
+    <string name="safe_area_edge_left">左辺</string>
+    <string name="safe_area_edge_right">右辺</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">保存</string>
     <string name="save_1_1">正方形で保存</string>
     <string name="save_and_reconnect">保存して再接続</string>
@@ -920,6 +929,9 @@
     <string name="settings_discard_pending_title">変更を破棄しますか？</string>
     <string name="settings_discard_pending_message">解像度、フレームレート、接続などの変更がまだ保存されていません。「保存して再接続」を実行すると反映されます。</string>
     <string name="settings_discard_pending_confirm">破棄</string>
+    <string name="settings_stutter_detected_title">CarPlay の映像がカクついています</string>
+    <string name="settings_stutter_detected_message">CarPlay でフレーム落ちが続いています。%1$sを%2$sに下げて再接続しますか？</string>
+    <string name="settings_stutter_ignore">後で</string>
     <string name="settings_gesture_disabled">オフ</string>
     <string name="settings_gesture_disabled_hint">下スワイプのショートカットは無効です。</string>
     <string name="settings_gesture_disabled_action">クイックメニュー · スワイプ無効（タップして変更）</string>

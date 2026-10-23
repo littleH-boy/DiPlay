@@ -29,6 +29,10 @@ When the car's own music app is playing as well, the wheel reaches both it and C
 
 Tested on the car named above; other Geely/Lynk firmware is untested.
 
+## Changan top bar
+
+On the 2025 Changan Eado (third generation) portrait head unit, the bar across the top of the screen is a system overlay drawn by the launcher. The "Hide status bar" switch cannot remove it — hiding only leaves a white strip — while the bottom navigation bar hides normally. Recommended setup: open **Settings → Display → Safe area**, step the Top edge down to the bar height (about 10–13% of the screen height; each step moves 1%), turn on **Keep reserved areas black**, and save. The change applies at the next CarPlay connection; the strip under the top bar then shows black instead of picture, and the CarPlay content stays clear of the overlay. The safe area is remembered per window resolution, so a different window size needs its own adjustment.
+
 ## Android 9 Wi-Fi Direct and experimental features
 
 The Android 9 path creates or reuses a persistent system profile with the public legacy group API, reads generated credentials and uses the firmware channel setter where available. It serializes pinning/cancellation, avoids foreign groups and removes only its owned active group; persistent profiles are not deleted. Unknown setter outcomes stop startup, and unreliable pinning/cleanup should use the manual car hotspot. See [legacy limits](ANDROID9_WIFI_DIRECT.md); the contributor's Redmi K20 Pro result does not validate every BYD Android 9 firmware.

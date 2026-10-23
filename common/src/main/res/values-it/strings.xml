@@ -395,6 +395,7 @@
     <string name="settings_experimental_display">Schermo (sperimentale)</string>
     <string name="settings_diagnostics_summary">Salva un report locale quando risolvi un problema di connessione</string>
     <string name="settings_full_screen_description">Nascondi le barre di stato e di navigazione in DiPlay e in CarPlay.</string>
+    <string name="settings_safe_area">Area sicura</string>
     <string name="settings_vehicle_description">Le funzioni del veicolo e del cruscotto variano in base a modello e firmware. Controllale nelle impostazioni Avanzate prima di abilitare i controlli sperimentali.</string>
     <string name="settings_open_advanced">Apri impostazioni Avanzate</string>
     <string name="setup_needs_attention">La configurazione richiede attenzione</string>
@@ -895,6 +896,9 @@
     <string name="settings_discard_pending_title">Annullare le modifiche?</string>
     <string name="settings_discard_pending_message">Risoluzione, frequenza fotogrammi, connessione e le altre impostazioni appena modificate non sono ancora salvate. Salva e riconnetti le applica.</string>
     <string name="settings_discard_pending_confirm">Scarta</string>
+    <string name="settings_stutter_detected_title">CarPlay va a scatti</string>
+    <string name="settings_stutter_detected_message">CarPlay sta perdendo frame da un po\'. Ridurre %1$s a %2$s e riconnettere?</string>
+    <string name="settings_stutter_ignore">Non ora</string>
     <string name="settings_gesture_disabled">Disattivato</string>
     <string name="settings_gesture_disabled_hint">La scorciatoia di scorrimento verso il basso è disattivata.</string>
     <string name="settings_gesture_disabled_action">Menu rapido · scorrimento disattivato (tocca per cambiare)</string>

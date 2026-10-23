@@ -346,6 +346,15 @@
     <string name="s_80_lighter_load" formatted="false">80% · 减轻负载</string>
     <string name="safe_area">安全区域</string>
     <string name="safe_area_waiting_for_activity_size">安全区域：正在等待活动窗口尺寸</string>
+    <string name="settings_safe_area">安全区域</string>
+    <string name="safe_area_applies_next_connection">保存后在下次 CarPlay 连接时生效。</string>
+    <string name="safe_area_black_reserved">预留区域保持黑色</string>
+    <string name="safe_area_black_reserved_description">CarPlay 不会在预留条内绘制任何内容。当车机固定栏遮挡画面时开启，被遮挡的条会显示为黑色而不是地图。</string>
+    <string name="safe_area_edge_top">上边</string>
+    <string name="safe_area_edge_bottom">下边</string>
+    <string name="safe_area_edge_left">左边</string>
+    <string name="safe_area_edge_right">右边</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">保存</string>
     <string name="save_1_1">保存 1:1 图片</string>
     <string name="save_and_reconnect">保存并重新连接</string>
@@ -878,6 +887,9 @@
     <string name="settings_discard_pending_title">要放弃更改吗？</string>
     <string name="settings_discard_pending_message">你刚更改的分辨率、帧率、连接以及其余设置尚未保存。“保存并重新连接”会应用它们。</string>
     <string name="settings_discard_pending_confirm">放弃</string>
+    <string name="settings_stutter_detected_title">CarPlay 画面不流畅</string>
+    <string name="settings_stutter_detected_message">CarPlay 已持续掉帧一段时间。要将%1$s降至%2$s并重新连接吗？</string>
+    <string name="settings_stutter_ignore">暂不</string>
     <string name="settings_gesture_disabled">关闭</string>
     <string name="settings_gesture_disabled_hint">已关闭向下滑动打开快捷菜单的手势。</string>
     <string name="settings_gesture_disabled_action">快捷菜单 · 关闭下滑（点按切换）</string>

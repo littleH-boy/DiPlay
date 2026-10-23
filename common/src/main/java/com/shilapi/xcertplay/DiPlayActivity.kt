@@ -1899,6 +1899,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             card.addView(button(getString(R.string.picture_adjustments), false) {
                 OwnScreenStart.start(this, Intent(this, CarPlayHostActivity::class.java)
                     .putExtra("picture_controls", true).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+            }, matchButton(0, 56))
+            card.addView(button(getString(R.string.settings_safe_area), false) {
+                OwnScreenStart.start(this, Intent(this, CarPlayHostActivity::class.java)
+                    .putExtra("safe_area_editor", true).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
             }, matchButton(0, 56).apply { bottomMargin = dp(24) })
             carPlaySizeControl(card)
             resolutionSettingControl(

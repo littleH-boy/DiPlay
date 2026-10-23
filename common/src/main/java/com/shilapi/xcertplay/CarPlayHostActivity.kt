@@ -89,7 +89,9 @@ import com.shilapi.xcertplay.airplay.AirPlaySafeArea
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.CarPlayMediaEngine
+import com.shilapi.xcertplay.airplay.SafeAreaEdge
 import com.shilapi.xcertplay.airplay.SafeAreaRect
+import com.shilapi.xcertplay.airplay.stepEdgeInset
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.location.AndroidCarPlayLocationProvider
 import com.shilapi.xcertplay.media.AndroidMediaSink
@@ -381,6 +383,13 @@ class CarPlayHostActivity : ComponentActivity() {
             mainHandler.postDelayed(this, 50L)
         }
     }
+    // Feeds the stutter watch while CarPlay runs; the watch stays quiet unless the stutter is sustained.
+    private val stutterTick = object : Runnable {
+        override fun run() {
+            sampleVideoStutter()
+            mainHandler.postDelayed(this, STUTTER_SAMPLE_MILLIS)
+        }
+    }
     // Asks the iPhone for a picture again while the new surface has shown none.
     private val pictureRetry = Runnable {
         if (pictureHold?.visibility == View.VISIBLE) {
@@ -394,6 +403,10 @@ class CarPlayHostActivity : ComponentActivity() {
     private var directVideoOutput = false
     // Diagnostics setting: a game-style FPS counter over the picture.
     private var fpsCounter: FpsCounterOverlay? = null
+    // Stutter watch: samples the live counters once a second and, when the picture keeps losing frames
+    // or decoding slowly, offers the next lower display setting once per session.
+    private var stutterMonitor: VideoStutterMonitor? = null
+    private var stutterMonitorSink: AndroidMediaSink? = null
     // Sinks whose sessions are being torn down; their decoders may still render to the current surface
     // until they have released their codecs, so a destroyed surface is detached from them too. A restart
     // and a shutdown can overlap, so this is a set.
@@ -440,6 +453,8 @@ class CarPlayHostActivity : ComponentActivity() {
     private var safeAreaEditorView: SafeAreaEditorView? = null
     private var safeAreaEditSize: DisplaySize? = null
     private var safeAreaEditorActive = false
+    private var safeAreaEditorMenuOpenBefore = false
+    private val safeAreaStepperValues = mutableMapOf<SafeAreaEdge, TextView>()
     private var externalActivityInProgress = false
     private var sink: AndroidMediaSink? = null
     private var controller: CarPlayController? = null
@@ -1130,6 +1145,8 @@ class CarPlayHostActivity : ComponentActivity() {
         homeScreenVisible = null
         // Read here so a change made in Settings applies when the projection comes back.
         if (AirPlayPersistence.loadFpsCounter(this)) fpsCounter?.start() else fpsCounter?.stop()
+        mainHandler.removeCallbacks(stutterTick)
+        mainHandler.postDelayed(stutterTick, STUTTER_SAMPLE_MILLIS)
     }
 
     override fun onResume() {
@@ -1162,6 +1179,11 @@ class CarPlayHostActivity : ComponentActivity() {
         if (intent.getBooleanExtra("picture_controls", false)) {
             intent.removeExtra("picture_controls")
             openPicturePanel()
+        }
+        if (intent.getBooleanExtra("safe_area_editor", false)) {
+            intent.removeExtra("safe_area_editor")
+            // After the window lays out: the editor maps the reserved area against the view size.
+            videoView?.post { openSafeAreaEditor() }
         }
         val languagePreference = AppLocale.preference(this)
         if (Build.VERSION.SDK_INT < 33 && languagePreference != languagePreferenceAtCreate) {
@@ -1769,6 +1791,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onStop() {
         fpsCounter?.stop()
+        mainHandler.removeCallbacks(stutterTick)
         closePicturePanel()
         // The controller, USB/iAP2 link, and VPN attachment intentionally outlive the UI.
         isActivityStarted = false
@@ -4253,10 +4276,38 @@ class CarPlayHostActivity : ComponentActivity() {
                 Gravity.TOP or Gravity.START,
             ),
         )
+        // The editor covers the menu, so the controls a driver needs while reserving an area for
+        // an unhideable car bar live here: precise steps, black reserved strips, and the timing.
+        val bottom = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(16))
+        }
+        bottom.addView(buildSafeAreaStepperGrid())
+        bottom.addView(
+            settingsSwitchRow(
+                label = getString(R.string.safe_area_black_reserved),
+                checked = !safeAreaDrawOutside,
+                description = getString(R.string.safe_area_black_reserved_description),
+            ) { keepBlack ->
+                safeAreaDrawOutside = !keepBlack
+                // Outside the menu there is no staged save that would persist this field.
+                if (!menuOpen) AirPlayPersistence.saveSafeAreaDrawOutside(this, safeAreaDrawOutside)
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(10) },
+        )
+        bottom.addView(
+            menuText(getString(R.string.safe_area_applies_next_connection), 13f, MENU_SECONDARY),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(6) },
+        )
         val controls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(dp(16), dp(10), dp(16), dp(16))
         }
         controls.addView(
             DiPlayButton(this).apply {
@@ -4264,7 +4315,9 @@ class CarPlayHostActivity : ComponentActivity() {
                 style(DiPlayButtonKind.SECONDARY, overlayPalette, overlay = true)
                 setOnClickListener { closeSafeAreaEditor() }
             },
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f),
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                topMargin = dp(10)
+            },
         )
         controls.addView(
             DiPlayButton(this).apply {
@@ -4274,10 +4327,18 @@ class CarPlayHostActivity : ComponentActivity() {
             },
             LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                 marginStart = dp(12)
+                topMargin = dp(10)
             },
         )
-        overlay.addView(
+        bottom.addView(
             controls,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        overlay.addView(
+            bottom,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -4286,6 +4347,96 @@ class CarPlayHostActivity : ComponentActivity() {
         )
         safeAreaEditorView = editor
         return overlay
+    }
+
+    /** Four boundary steppers in a 2 x 2 grid, one row per axis pair. */
+    private fun buildSafeAreaStepperGrid(): View {
+        val grid = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        safeAreaStepperValues.clear()
+        listOf(
+            SafeAreaEdge.TOP to SafeAreaEdge.BOTTOM,
+            SafeAreaEdge.LEFT to SafeAreaEdge.RIGHT,
+        ).forEachIndexed { index, (first, second) ->
+            val line = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            line.addView(safeAreaEdgeStepper(first), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            line.addView(
+                safeAreaEdgeStepper(second),
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(12) },
+            )
+            grid.addView(
+                line,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ).apply { topMargin = if (index > 0) dp(8) else 0 },
+            )
+        }
+        return grid
+    }
+
+    /** One `[-] 上边 · 8% (103px) [+]` control for a safe-area boundary. */
+    private fun safeAreaEdgeStepper(edge: SafeAreaEdge): View {
+        val value = menuText("", 14f, MENU_PRIMARY).apply {
+            gravity = Gravity.CENTER
+        }
+        safeAreaStepperValues[edge] = value
+        val minus = DiPlayButton(this).apply {
+            text = "−"
+            style(DiPlayButtonKind.SECONDARY, overlayPalette, overlay = true)
+            setOnClickListener { stepSafeAreaEdge(edge, -1) }
+        }
+        val plus = DiPlayButton(this).apply {
+            text = "+"
+            style(DiPlayButtonKind.SECONDARY, overlayPalette, overlay = true)
+            setOnClickListener { stepSafeAreaEdge(edge, 1) }
+        }
+        val size = dp(44)
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(minus, LinearLayout.LayoutParams(dp(52), size))
+            addView(value, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            addView(plus, LinearLayout.LayoutParams(dp(52), size).apply { marginStart = dp(8) })
+        }
+    }
+
+    private fun stepSafeAreaEdge(edge: SafeAreaEdge, direction: Int) {
+        val size = safeAreaEditSize ?: currentActivitySize() ?: return
+        val current = safeAreaEditorView?.currentRectForSource() ?: return
+        val stepped = current.stepEdgeInset(edge, direction, size.width, size.height)
+        if (stepped == current) return
+        safeAreaEditorView?.setRect(stepped, size.width, size.height)
+        refreshSafeAreaSteppers()
+    }
+
+    /** Reserved-strip labels in the activity's pixel space, matching the drawn editor labels. */
+    private fun refreshSafeAreaSteppers() {
+        val size = safeAreaEditSize ?: return
+        val rect = safeAreaEditorView?.currentRectForSource() ?: return
+        val labels = mapOf(
+            SafeAreaEdge.LEFT to getString(R.string.safe_area_edge_left),
+            SafeAreaEdge.TOP to getString(R.string.safe_area_edge_top),
+            SafeAreaEdge.RIGHT to getString(R.string.safe_area_edge_right),
+            SafeAreaEdge.BOTTOM to getString(R.string.safe_area_edge_bottom),
+        )
+        val insets = mapOf(
+            SafeAreaEdge.LEFT to rect.left,
+            SafeAreaEdge.TOP to rect.top,
+            SafeAreaEdge.RIGHT to size.width - rect.right,
+            SafeAreaEdge.BOTTOM to size.height - rect.bottom,
+        )
+        for ((edge, label) in labels) {
+            val inset = insets.getValue(edge)
+            val axis = if (edge == SafeAreaEdge.LEFT || edge == SafeAreaEdge.RIGHT) size.width else size.height
+            val percent = if (axis > 0) Math.round(inset * 100.0 / axis).toInt() else 0
+            safeAreaStepperValues[edge]?.text =
+                getString(R.string.safe_area_edge_value, label, percent, inset)
+        }
     }
 
     private fun settingsInputRow(
@@ -5113,13 +5264,15 @@ class CarPlayHostActivity : ComponentActivity() {
             ?: AirPlaySafeArea.default(size.width, size.height)
         safeAreaEditSize = size
         safeAreaEditorActive = true
+        safeAreaEditorMenuOpenBefore = menuOpen
         // Keep the current activity size; changing system bars here would remap the safe area.
         settingsMenu?.visibility = View.GONE
         safeAreaEditor?.visibility = View.VISIBLE
         editorView.setRect(initial, size.width, size.height)
+        refreshSafeAreaSteppers()
         appendLog(
             "Safe area editor opened for ${size.width}x${size.height}; " +
-                "drag the four boundaries",
+                "drag or step the four boundaries",
         )
     }
 
@@ -5128,7 +5281,8 @@ class CarPlayHostActivity : ComponentActivity() {
         safeAreaEditorActive = false
         safeAreaEditSize = null
         safeAreaEditor?.visibility = View.GONE
-        settingsMenu?.visibility = View.VISIBLE
+        // The editor also opens from Settings → Display, where the menu itself is closed.
+        settingsMenu?.visibility = if (safeAreaEditorMenuOpenBefore) View.VISIBLE else View.GONE
         updateSafeAreaSummary()
         updateResolutionMenu()
         appendLog("Safe area editor closed")
@@ -5973,6 +6127,54 @@ class CarPlayHostActivity : ComponentActivity() {
         )
     }
 
+    /** One sample for [VideoStutterMonitor]; a new sink (a new session) starts the watch over. */
+    private fun sampleVideoStutter() {
+        val sinkNow = sink
+        if (sinkNow !== stutterMonitorSink) {
+            stutterMonitorSink = sinkNow
+            stutterMonitor = sinkNow?.let { VideoStutterMonitor({ fps }, { displayScalePercent }) }
+            return
+        }
+        val monitor = stutterMonitor ?: return
+        if (menuOpen || handshakeResetInProgress || smoothVideo || shuttingDown.get()) {
+            monitor.reset()
+            return
+        }
+        monitor.onCounters(sinkNow?.liveVideoCounters())?.let(::offerStutterSuggestion)
+    }
+
+    /** Asks before lowering the display step the watch offered; the reconnect happens only from here. */
+    private fun offerStutterSuggestion(suggestion: StutterSuggestion) {
+        if (!isActivityStarted || isFinishing || isDestroyed) return
+        val (settingName, loweredTo) = when (suggestion) {
+            is StutterSuggestion.FrameRate -> getString(R.string.frame_rate) to "${suggestion.fps} fps"
+            is StutterSuggestion.Resolution -> getString(R.string.resolution) to "${suggestion.percent}%"
+        }
+        appendLog("Stutter watch: offering $settingName $loweredTo")
+        AlertDialog.Builder(this, if (appNight) R.style.Theme_Xcertplay_Dialog_Dark else R.style.Theme_Xcertplay_Dialog_Light)
+            .setTitle(getString(R.string.settings_stutter_detected_title))
+            .setMessage(getString(R.string.settings_stutter_detected_message, settingName, loweredTo))
+            .setPositiveButton(getString(R.string.save_and_reconnect)) { _, _ -> applyStutterSuggestion(suggestion) }
+            .setNegativeButton(getString(R.string.settings_stutter_ignore), null)
+            .show()
+    }
+
+    private fun applyStutterSuggestion(suggestion: StutterSuggestion) {
+        when (suggestion) {
+            is StutterSuggestion.FrameRate -> {
+                fps = suggestion.fps
+                AirPlayPersistence.saveFps(this, suggestion.fps)
+                restartCarPlay("Stutter watch: frame rate ${suggestion.fps} fps")
+            }
+            is StutterSuggestion.Resolution -> {
+                displayScalePercent = suggestion.percent
+                displayScaleTenths = CarPlayDisplayScale.sanitize((suggestion.percent + 5) / 10)
+                AirPlayPersistence.saveDisplayScalePercent(this, suggestion.percent)
+                restartCarPlay("Stutter watch: resolution ${suggestion.percent}%")
+            }
+        }
+    }
+
     /** Full-stack fallback when an AirPlay-only reconnect is unavailable. */
     private fun restartCarPlay(reason: String) {
         if (!CarPlayBackgroundSession.isOwner(this)) return
@@ -6742,6 +6944,7 @@ class CarPlayHostActivity : ComponentActivity() {
         const val DISPLAY_CHANGE_DEBOUNCE_MILLIS = 500L
         const val CONFIGURATION_POLL_INTERVAL_MILLIS = 2_000L
         const val RECONNECT_DELAY_MILLIS = 2_000L
+        const val STUTTER_SAMPLE_MILLIS = 1_000L
         const val IAP_TUNNEL_RECONNECT_DELAY_MILLIS = 15_000L
         const val CONTROLLER_CLOSE_TIMEOUT_MILLIS = 4_000L
         const val AUDIO_CAPTURE_MARKER = "audio-capture.enabled"

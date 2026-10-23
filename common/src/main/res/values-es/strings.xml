@@ -334,6 +334,15 @@
     <string name="s_80_lighter_load" formatted="false">80% · carga más ligera</string>
     <string name="safe_area">Zona segura</string>
     <string name="safe_area_waiting_for_activity_size">Zona segura: esperando el tamaño de la actividad</string>
+    <string name="settings_safe_area">Zona segura</string>
+    <string name="safe_area_applies_next_connection">Al guardar, se aplica en la próxima conexión CarPlay.</string>
+    <string name="safe_area_black_reserved">Mantener negras las zonas reservadas</string>
+    <string name="safe_area_black_reserved_description">CarPlay no dibuja nada en las franjas reservadas. Actívalo cuando una barra fija del coche tapa la imagen: la franja tapada se muestra en negro en lugar del mapa.</string>
+    <string name="safe_area_edge_top">Borde superior</string>
+    <string name="safe_area_edge_bottom">Borde inferior</string>
+    <string name="safe_area_edge_left">Borde izquierdo</string>
+    <string name="safe_area_edge_right">Borde derecho</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">Guardar</string>
     <string name="save_1_1">Guardar 1:1</string>
     <string name="save_and_reconnect">Guardar y reconectar</string>
@@ -755,6 +764,9 @@
     <string name="settings_discard_pending_title">¿Descartar los cambios?</string>
     <string name="settings_discard_pending_message">La resolución, la velocidad de fotogramas, la conexión y los demás ajustes que acabas de cambiar todavía no se han guardado. Guardar y reconectar los aplica.</string>
     <string name="settings_discard_pending_confirm">Descartar</string>
+    <string name="settings_stutter_detected_title">CarPlay va a tirones</string>
+    <string name="settings_stutter_detected_message">CarPlay lleva un tiempo perdiendo fotogramas. ¿Reducir %1$s a %2$s y reconectar?</string>
+    <string name="settings_stutter_ignore">Ahora no</string>
     <string name="settings_gesture_disabled">Desactivado</string>
     <string name="settings_gesture_disabled_hint">El gesto de deslizar hacia abajo está desactivado.</string>
     <string name="settings_gesture_disabled_action">Menú rápido · deslizamiento desactivado (toca para cambiar)</string>

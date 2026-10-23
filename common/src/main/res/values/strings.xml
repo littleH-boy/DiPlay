@@ -347,6 +347,14 @@
     <string name="s_80_lighter_load" formatted="false">80% · lighter load</string>
     <string name="safe_area">Safe area</string>
     <string name="safe_area_waiting_for_activity_size">Safe area: waiting for activity size</string>
+    <string name="safe_area_applies_next_connection">Saving applies to the next CarPlay connection.</string>
+    <string name="safe_area_black_reserved">Keep reserved areas black</string>
+    <string name="safe_area_black_reserved_description">CarPlay draws nothing in the reserved strips. Use this when a fixed car bar covers the picture, so the covered strip shows black instead of the map.</string>
+    <string name="safe_area_edge_top">Top</string>
+    <string name="safe_area_edge_bottom">Bottom</string>
+    <string name="safe_area_edge_left">Left</string>
+    <string name="safe_area_edge_right">Right</string>
+    <string name="safe_area_edge_value">%1$s · %2$d%% (%3$d px)</string>
     <string name="save">Save</string>
     <string name="save_1_1">Save 1:1</string>
     <string name="save_and_reconnect">Save and reconnect</string>
@@ -401,6 +409,7 @@
     <string name="settings_experimental_display">Display (experimental)</string>
     <string name="settings_diagnostics_summary">Save a local report when troubleshooting a connection</string>
     <string name="settings_full_screen_description">Hide the status and navigation bars in DiPlay and CarPlay.</string>
+    <string name="settings_safe_area">Safe area</string>
     <string name="settings_vehicle_description">Vehicle and dashboard features vary by model and firmware. Review them in Advanced settings before enabling experimental controls.</string>
     <string name="settings_open_advanced">Open Advanced settings</string>
     <string name="setup_needs_attention">Setup needs attention</string>
@@ -921,6 +930,9 @@
     <string name="settings_discard_pending_title">Discard your changes?</string>
     <string name="settings_discard_pending_message">Resolution, frame rate, connection and the other settings you just changed are not saved yet. Save and reconnect applies them.</string>
     <string name="settings_discard_pending_confirm">Discard</string>
+    <string name="settings_stutter_detected_title">CarPlay looks choppy</string>
+    <string name="settings_stutter_detected_message">CarPlay has been dropping frames for a while. Lower the %1$s to %2$s and reconnect?</string>
+    <string name="settings_stutter_ignore">Not now</string>
     <string name="settings_gesture_disabled">Off</string>
     <string name="settings_gesture_disabled_hint">Swipe-down shortcut is disabled.</string>
     <string name="settings_gesture_disabled_action">Quick menu · swipe disabled (tap to change)</string>
